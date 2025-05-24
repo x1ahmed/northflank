@@ -13,6 +13,10 @@ const uuid = (process.env.UUID || 'd342d11e-d424-4583-b36e-524ab1f0afa4').replac
 // The port can be set via environment variable or defaults to 8008
 const port = process.env.PORT || 8080;
 
+// Derive the public host from environment variable or assume localhost if not set
+// In a production environment, set PUBLIC_HOST to your domain/IP
+const publicHost = process.env.PUBLIC_HOST || 'localhost'; 
+
 // Create an HTTP server to handle both web page requests and WebSocket upgrades
 const server = http.createServer((req, res) => {
     // Serve the home page for GET requests to the root path
@@ -66,12 +70,15 @@ const server = http.createServer((req, res) => {
                 </div>
 
                 <div id="vlessConfigModal" class="fixed inset-0 hidden items-center justify-center modal-backdrop">
-                    <div class="bg-white p-8 rounded-lg shadow-xl max-w-xl w-full modal-content relative"> <h2 class="text-2xl font-bold text-gray-800 mb-4">Your VLESS Configuration</h2>
+                    <div class="bg-white p-8 rounded-lg shadow-xl max-w-xl w-full modal-content relative"> 
+                        <h2 class="text-2xl font-bold text-gray-800 mb-4">Your VLESS Configuration</h2>
                         <div class="bg-gray-100 p-4 rounded-md mb-4 text-left">
                             <p class="mb-2"><strong>UUID:</strong> <span id="modalUuid" class="break-all font-mono text-sm"></span></p>
                             <p class="mb-2"><strong>Port:</strong> <span id="modalPort" class="font-mono text-sm"></span></p>
                             <p class="mb-2"><strong>Host:</strong> <span id="modalHost" class="font-mono text-sm"></span></p>
-                            <textarea id="vlessUri" class="w-full h-32 p-2 mt-4 border rounded-md resize-none bg-gray-50 text-gray-700 font-mono text-sm" readonly></textarea> </div>
+                            <textarea id="vlessUri" class="w-full h-32 p-2 mt-4 border rounded-md resize-none bg-gray-50 text-gray-700 font-mono text-sm" readonly></textarea> 
+                            <div id="loadingMessage" class="text-sm text-blue-600 mt-2 hidden">Generating URI...</div>
+                        </div>
                         <button id="copyConfigBtn" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-green-400 focus:ring-opacity-75 mr-2">
                             Copy URI
                         </button>
@@ -79,6 +86,7 @@ const server = http.createServer((req, res) => {
                             Close
                         </button>
                         <div id="copyMessage" class="text-sm text-green-600 mt-2 hidden">Copied to clipboard!</div>
+                        <div id="errorMessage" class="text-sm text-red-600 mt-2 hidden">Failed to get VLESS URI.</div>
                     </div>
                 </div>
 
@@ -93,29 +101,56 @@ const server = http.createServer((req, res) => {
                         const modalHost = document.getElementById('modalHost');
                         const vlessUri = document.getElementById('vlessUri');
                         const copyMessage = document.getElementById('copyMessage');
+                        const loadingMessage = document.getElementById('loadingMessage');
+                        const errorMessage = document.getElementById('errorMessage');
 
                         // Get UUID and Port from the server-side rendered HTML
                         const serverUuid = "${uuid}";
-                        const serverPort = "443";
-                        // Assuming the host is the current window's host for client-side display
-                        const serverHost = window.location.hostname === 'localhost' ? '127.0.0.1' : window.location.hostname;
+                        // VLESS typically runs on 443 with TLS over WebSocket
+                        // If your server listens on a different port for VLESS/WS, adjust this.
+                        const serverPort = "443"; 
+                        // Use the public host passed from the server-side
+                        const serverHost = "${publicHost}"; 
 
-                        getConfigBtn.addEventListener('click', () => {
+                        getConfigBtn.addEventListener('click', async () => { // Make the event listener async
+                            // Reset messages
+                            copyMessage.classList.add('hidden');
+                            errorMessage.classList.add('hidden');
+                            loadingMessage.classList.remove('hidden'); // Show loading message
+
                             // Populate modal with config details
                             modalUuid.textContent = serverUuid;
                             modalPort.textContent = serverPort;
                             modalHost.textContent = serverHost;
+                            vlessUri.value = 'Loading VLESS URI...'; // Set placeholder text
 
-                            // Construct a basic VLESS URI (simplified, without TLS/WS path etc.)
-                            // A real VLESS URI would be more complex, e.g., vless://<uuid>@<address>:<port>?type=ws&path=/<path>#<name>
-                            const uri = \`vless://\${serverUuid}@\${serverHost}:\${serverPort}?security=tls%26fp=randomized%26type=ws%26\${serverHost}%26encryption=none%23NodeBy-ModsBots\`;
-                           
-                            fetch('https://deno-proxy-version.deno.dev/?check=\${uri}'):
-                            vlessUri.value = uri;
+                            // Construct a basic VLESS URI to send to the Deno service
+                            // Ensure all query parameters are URL-encoded
+                            const baseUri = `vless://${serverUuid}@${serverHost}:${serverPort}?security=tls&fp=randomized&type=ws&host=${encodeURIComponent(serverHost)}&encryption=none#NodeBy-ModsBots`;
+                            
+                            let finalUri = baseUri; // Default to baseUri if fetch fails
+                            try {
+                                // Fetch the "checked" URI from the Deno service
+                                // Assume the Deno service returns the final URI as plain text
+                                const response = await fetch(`https://deno-proxy-version.deno.dev/?check=${encodeURIComponent(baseUri)}`);
+                                
+                                if (response.ok) {
+                                    finalUri = await response.text(); // Get the response as plain text
+                                    finalUri = finalUri.trim(); // Trim any whitespace
+                                } else {
+                                    console.error('Failed to fetch URI from Deno service:', response.status, response.statusText);
+                                    errorMessage.classList.remove('hidden'); // Show error message
+                                }
+                            } catch (error) {
+                                console.error('Error during Deno service fetch:', error);
+                                errorMessage.classList.remove('hidden'); // Show error message
+                            } finally {
+                                loadingMessage.classList.add('hidden'); // Hide loading message
+                                vlessUri.value = finalUri; // Set the URI based on the fetch result or fallback
+                            }
 
                             vlessConfigModal.classList.remove('hidden');
                             vlessConfigModal.classList.add('flex'); // Use flex to center the modal
-                            copyMessage.classList.add('hidden'); // Hide copy message on open
                         });
 
                         closeModalBtn.addEventListener('click', () => {
@@ -144,6 +179,8 @@ const server = http.createServer((req, res) => {
                             } catch (err) {
                                 console.error('Failed to copy text: ', err);
                                 // Optionally, show an error message
+                                errorMessage.textContent = 'Failed to copy!';
+                                errorMessage.classList.remove('hidden');
                             }
                         });
                     });
@@ -225,6 +262,7 @@ server.listen(port, () => {
     logcb('Server listening on port:', port);
     logcb('VLESS Proxy UUID:', uuid); // Still logged to console for server admin
     logcb('Access home page at: http://localhost:' + port);
+    logcb('Public Host (for VLESS URI):', publicHost);
 });
 
 // Handle server errors
