@@ -1,0 +1,12 @@
+{
+  "name": "your-project",
+  "version": "1.0.0",
+  "main": "server.js",
+  "type": "module", // <--- Add this line
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "ws": "^8.x.x" // Ensure 'ws' is installed
+  }
+}
