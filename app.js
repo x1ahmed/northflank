@@ -86,7 +86,7 @@ const server = http.createServer((req, res) => {
                             Close
                         </button>
                         <div id="copyMessage" class="text-sm text-green-600 mt-2 hidden">Copied to clipboard!</div>
-                        
+                        <div id="checkStatus" class="text-sm mt-2"></div>
                     </div>
                 </div>
 
@@ -118,7 +118,7 @@ const server = http.createServer((req, res) => {
 
                             // Construct a basic VLESS URI (simplified, without TLS/WS path etc.)
                             // A real VLESS URI would be more complex, e.g., vless://<uuid>@<address>:<port>?type=ws&path=/<path>#<name>
-                            const uri = \`vless://\${serverUuid}@\${serverHost}:443?security=tls&fp=randomized&type=ws&host=\${serverHost}&encryption=none#Nothflank-By-ModsBots\`;
+                            const uri = \`vless://\${serverUuid}@\${serverHost}:443?security=tls&fp=randomized&type=ws&\${serverHost}&encryption=none#Nothflank-By-ModsBots\`;
                             vlessUri.value = uri;
 
                             // Show the modal
@@ -142,7 +142,7 @@ const server = http.createServer((req, res) => {
                                 } else {
                                     checkStatus.textContent = \`External check failed: Server responded with status \${response.status}\`;
                                     checkStatus.classList.remove('text-gray-700');
-                                    checkStatus.classList.add('text-green-600'); // Red for failure
+                                    checkStatus.classList.add('text-red-600'); // Red for failure
                                 }
                             } catch (error) {
                                 checkStatus.textContent = \`External check error: \${error.message}\`;
