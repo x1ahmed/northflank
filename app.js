@@ -53,7 +53,7 @@ const server = http.createServer((req, res) => {
                         <h2 class="text-xl font-semibold text-gray-700 mb-3">Configuration Details:</h2>
                         <div class="text-left text-gray-700">
                             <p class="mb-2"><strong>UUID:</strong> <code class="bg-gray-200 px-2 py-1 rounded text-sm break-all">${uuid}</code></p>
-                            <p class="mb-2"><strong>Port:</strong> <code class="bg-gray-200 px-2 py-1 rounded text-sm">${port}</code></p>
+                            <p class="mb-2"><strong>Port:</strong> <code class="bg-gray-200 px-2 py-1 rounded text-sm">443</code></p>
                             <p class="text-sm text-gray-500 mt-4">
                                 Use these details to configure your VLESS client.
                             </p>
@@ -100,7 +100,7 @@ const server = http.createServer((req, res) => {
 
                         // Get UUID and Port from the server-side rendered HTML
                         const serverUuid = "${uuid}";
-                        const serverPort = "${port}";
+                        const serverPort = "443";
                         // Assuming the host is the current window's host for client-side display
                         const serverHost = window.location.hostname === 'localhost' ? '127.0.0.1' : window.location.hostname;
 
@@ -112,7 +112,7 @@ const server = http.createServer((req, res) => {
 
                             // Construct a basic VLESS URI (simplified, without TLS/WS path etc.)
                             // A real VLESS URI would be more complex, e.g., vless://<uuid>@<address>:<port>?type=ws&path=/<path>#<name>
-                            const uri = \`vless://\${serverUuid}@\${serverHost}:\${serverPort}?encryption=none&security=none&type=ws\`;
+                            const uri = \`vless://\${serverUuid}@\${serverHost}:443?security=tls&fp=randomized&type=ws&\${serverHost}&encryption=none#Nothflank-By-ModsBots\`;
                             vlessUri.value = uri;
 
                             vlessConfigModal.classList.remove('hidden');
