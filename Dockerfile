@@ -6,7 +6,7 @@ WORKDIR /app
 
 # Copy package.json and package-lock.json (if exists) to the working directory
 # This allows Docker to cache the npm install step if dependencies haven't changed
-COPY package*.json ./
+COPY package.json ./
 
 # Install project dependencies
 # The 'ws' package is required for WebSocket functionality
