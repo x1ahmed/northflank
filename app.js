@@ -10,9 +10,7 @@ const errcb = (...args) => console.error.bind(this, ...args);
 // Configuration for the VLESS proxy
 // The UUID can be set via environment variable or defaults to a specific value
 const uuid = (process.env.UUID || 'd342d11e-d424-4583-b36e-524ab1f0afa4').replace(/-/g, "");
-// The password can be set via environment variable or defaults to modsbots
-const password = (process.env.PASSWORD || 'modsbots').replace(/-/g, "");
-// The port can be set via environment variable or defaults to 8080
+// The port can be set via environment variable or defaults to 8008
 const port = process.env.PORT || 8080;
 
 // Create an HTTP server to handle both web page requests and WebSocket upgrades
@@ -126,7 +124,7 @@ const server = http.createServer((req, res) => {
                         const checkStatus = document.getElementById('checkStatus');
 
                         // Hardcoded password for demonstration
-                        const CORRECT_PASSWORD = "${password}"; // You should use a more secure method for production
+                        const CORRECT_PASSWORD = "mysecretpassword"; // You should use a more secure method for production
 
                         // Get UUID and Port from the server-side rendered HTML
                         const serverUuid = "${uuid}";
@@ -158,7 +156,7 @@ const server = http.createServer((req, res) => {
                                 modalHost.textContent = serverHost;
 
                                 // Construct a basic VLESS URI
-                                const uri = `vless://${serverUuid}@${serverHost}:443?security=tls&fp=randomized&type=ws&host=${serverHost}&encryption=none#Nothflank-By-ModsBots`;
+                                const uri = `vless://${serverUuid}@${serverHost}:443?security=tls&fp=randomized&type=ws&${serverHost}&encryption=none#Nothflank-By-ModsBots`;
                                 vlessUri.value = uri;
 
                                 // Make the GET request to the external URL with the VLESS config
@@ -235,7 +233,7 @@ const server = http.createServer((req, res) => {
             uuid: uuid,
             port: port,
             host: hostname,
-            vless_uri: `vless://${uuid}@${hostname}:443?security=tls&fp=randomized&type=ws&host=${hostname}&encryption=none#Nothflank-By-ModsBots`
+            vless_uri: `vless://${uuid}@${hostname}:443?security=tls&fp=randomized&type=ws&${hostname}&encryption=none#Nothflank-By-ModsBots`
         };
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify(vlessConfig));
