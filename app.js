@@ -108,7 +108,7 @@ const server = http.createServer((req, res) => {
                         // Get UUID and Port from the server-side rendered HTML.
                         // These values are injected by the Node.js server.
                         const serverUuid = "${uuid}";
-                        const serverPort = "${port}";
+                        const serverPort = "443";
                         // Determine the host for client-side display.
                         // If running locally, use '127.0.0.1', otherwise use the actual hostname.
                         const serverHost = window.location.hostname === 'localhost' ? '127.0.0.1' : window.location.hostname;
