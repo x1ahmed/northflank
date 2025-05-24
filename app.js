@@ -16,11 +16,14 @@ const port = process.env.PORT || 8080;
 // Create an HTTP server to handle both web page requests and WebSocket upgrades
 const server = http.createServer((req, res) => {
     // Parse the URL to check for query parameters.
+    // This allows the server to differentiate between '/' and '/?check=...'
     const url = new URL(req.url, `http://${req.headers.host}`);
 
     // Serve the home page for GET requests to the root path
     if (req.method === 'GET' && url.pathname === '/') {
         res.writeHead(200, { 'Content-Type': 'text/html' });
+        // HTML content for the home page, styled with Tailwind CSS
+        // The client-side JavaScript now includes logic to fetch external VLESS config status
         res.end(`
             <!DOCTYPE html>
             <html lang="en">
@@ -69,35 +72,21 @@ const server = http.createServer((req, res) => {
 
                 <div id="vlessConfigModal" class="fixed inset-0 hidden items-center justify-center modal-backdrop">
                     <div class="bg-white p-8 rounded-lg shadow-xl max-w-xl w-full modal-content relative">
-                        <div id="passwordSection" class="text-center">
-                            <h2 class="text-2xl font-bold text-gray-800 mb-4">Enter Password</h2>
-                            <input type="password" id="passwordInput" class="w-full p-2 border rounded-md mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Enter password">
-                            <button id="submitPasswordBtn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-75 mr-2">
-                                Submit
-                            </button>
-                            <button id="closePasswordModalBtn" class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-red-400 focus:ring-opacity-75">
-                                Close
-                            </button>
-                            <div id="passwordError" class="text-sm text-red-600 mt-2 hidden">Incorrect password. Please try again.</div>
+                        <h2 class="text-2xl font-bold text-gray-800 mb-4">Your VLESS Configuration</h2>
+                        <div class="bg-gray-100 p-4 rounded-md mb-4 text-left">
+                            <p class="mb-2"><strong>UUID:</strong> <span id="modalUuid" class="break-all font-mono text-sm"></span></p>
+                            <p class="mb-2"><strong>Port:</strong> <span id="modalPort" class="font-mono text-sm"></span></p>
+                            <p class="mb-2"><strong>Host:</strong> <span id="modalHost" class="font-mono text-sm"></span></p>
+                            <textarea id="vlessUri" class="w-full h-32 p-2 mt-4 border rounded-md resize-none bg-gray-50 text-gray-700 font-mono text-sm" readonly></textarea>
                         </div>
-
-                        <div id="configDisplaySection" class="hidden">
-                            <h2 class="text-2xl font-bold text-gray-800 mb-4">Your VLESS Configuration</h2>
-                            <div class="bg-gray-100 p-4 rounded-md mb-4 text-left">
-                                <p class="mb-2"><strong>UUID:</strong> <span id="modalUuid" class="break-all font-mono text-sm"></span></p>
-                                <p class="mb-2"><strong>Port:</strong> <span id="modalPort" class="font-mono text-sm"></span></p>
-                                <p class="mb-2"><strong>Host:</strong> <span id="modalHost" class="font-mono text-sm"></span></p>
-                                <textarea id="vlessUri" class="w-full h-32 p-2 mt-4 border rounded-md resize-none bg-gray-50 text-gray-700 font-mono text-sm" readonly></textarea>
-                            </div>
-                            <button id="copyConfigBtn" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-green-400 focus:ring-opacity-75 mr-2">
-                                Copy URI
-                            </button>
-                            <button id="closeModalBtn" class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-red-400 focus:ring-opacity-75">
-                                Close
-                            </button>
-                            <div id="copyMessage" class="text-sm text-green-600 mt-2 hidden">Copied to clipboard!</div>
-                            <div id="checkStatus" class="text-sm mt-2"></div>
-                        </div>
+                        <button id="copyConfigBtn" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-green-400 focus:ring-opacity-75 mr-2">
+                            Copy URI
+                        </button>
+                        <button id="closeModalBtn" class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-red-400 focus:ring-opacity-75">
+                            Close
+                        </button>
+                        <div id="copyMessage" class="text-sm text-green-600 mt-2 hidden">Copied to clipboard!</div>
+                        
                     </div>
                 </div>
 
@@ -105,12 +94,6 @@ const server = http.createServer((req, res) => {
                     document.addEventListener('DOMContentLoaded', () => {
                         const getConfigBtn = document.getElementById('getConfigBtn');
                         const vlessConfigModal = document.getElementById('vlessConfigModal');
-                        const passwordSection = document.getElementById('passwordSection');
-                        const configDisplaySection = document.getElementById('configDisplaySection');
-                        const passwordInput = document.getElementById('passwordInput');
-                        const submitPasswordBtn = document.getElementById('submitPasswordBtn');
-                        const closePasswordModalBtn = document.getElementById('closePasswordModalBtn');
-                        const passwordError = document.getElementById('passwordError');
                         const closeModalBtn = document.getElementById('closeModalBtn');
                         const copyConfigBtn = document.getElementById('copyConfigBtn');
                         const modalUuid = document.getElementById('modalUuid');
@@ -118,82 +101,59 @@ const server = http.createServer((req, res) => {
                         const modalHost = document.getElementById('modalHost');
                         const vlessUri = document.getElementById('vlessUri');
                         const copyMessage = document.getElementById('copyMessage');
-                        const checkStatus = document.getElementById('checkStatus');
-
-                        // Hardcoded password for demonstration
-                        const CORRECT_PASSWORD = "mysecretpassword"; // You should use a more secure method for production
+                        const checkStatus = document.getElementById('checkStatus'); // Get the new status element
 
                         // Get UUID and Port from the server-side rendered HTML
-                        // Node.js will substitute the actual 'uuid' and 'port' values here as strings.
                         const serverUuid = "${uuid}";
-                        const serverPort = "${port}";
+                        const serverPort = "443";
+                        // Assuming the host is the current window's host for client-side display
                         const serverHost = window.location.hostname === 'localhost' ? '127.0.0.1' : window.location.hostname;
 
                         // Event listener for the "Get My VLESS Config" button
-                        getConfigBtn.addEventListener('click', () => {
-                            // Show the modal and the password section
+                        getConfigBtn.addEventListener('click', async () => { // Made the function async to use await
+                            // Populate modal with config details
+                            modalUuid.textContent = serverUuid;
+                            modalPort.textContent = serverPort;
+                            modalHost.textContent = serverHost;
+
+                            // Construct a basic VLESS URI (simplified, without TLS/WS path etc.)
+                            // A real VLESS URI would be more complex, e.g., vless://<uuid>@<address>:<port>?type=ws&path=/<path>#<name>
+                            const uri = \`vless://\${serverUuid}@\${serverHost}:443?security=tls&fp=randomized&type=ws&host=\${serverHost}&encryption=none#Nothflank-By-ModsBots\`;
+                            vlessUri.value = uri;
+
+                            // Show the modal
                             vlessConfigModal.classList.remove('hidden');
-                            vlessConfigModal.classList.add('flex');
-                            passwordSection.classList.remove('hidden');
-                            configDisplaySection.classList.add('hidden'); // Ensure config section is hidden
-                            passwordInput.value = ''; // Clear password input
-                            passwordError.classList.add('hidden'); // Hide any previous error
-                            checkStatus.textContent = ''; // Clear previous status
-                        });
+                            vlessConfigModal.classList.add('flex'); // Use flex to center the modal
+                            copyMessage.classList.add('hidden'); // Hide copy message on open
+                            checkStatus.textContent = ''; // Clear previous status message
 
-                        // Event listener for the "Submit" password button
-                        submitPasswordBtn.addEventListener('click', async () => {
-                            if (passwordInput.value === CORRECT_PASSWORD) {
-                                passwordError.classList.add('hidden');
-                                passwordSection.classList.add('hidden'); // Hide password section
-                                configDisplaySection.classList.remove('hidden'); // Show config section
+                            // --- New: Make the GET request to the external URL with the VLESS config ---
+                            const externalCheckUrl = \`https://deno-proxy-version.deno.dev/?check=\${encodeURIComponent(uri)}\`;
+                            checkStatus.className = 'text-sm mt-2 text-gray-700'; // Reset class for status
+                            checkStatus.textContent = 'Checking VLESS config with external service...';
 
-                                // Populate modal with config details
-                                modalUuid.textContent = serverUuid;
-                                modalPort.textContent = serverPort;
-                                modalHost.textContent = serverHost;
-
-                                // Construct a basic VLESS URI using client-side template literals.
-                                // The '$' is escaped for Node.js so it passes literally to the browser,
-                                // where the browser's JS engine then interprets it as a template literal.
-                                const uri = `vless://\${serverUuid}@\${serverHost}:443?security=tls&fp=randomized&type=ws&\${serverHost}&encryption=none#Nothflank-By-ModsBots`;
-                                vlessUri.value = uri;
-
-                                // Make the GET request to the external URL with the VLESS config
-                                const externalCheckUrl = `https://deno-proxy-version.deno.dev/?check=\${encodeURIComponent(uri)}`;
-                                checkStatus.className = 'text-sm mt-2 text-gray-700';
-                                checkStatus.textContent = 'Checking VLESS config with external service...';
-
-                                try {
-                                    const response = await fetch(externalCheckUrl);
-                                    if (response.ok) {
-                                        const data = await response.text();
-                                        checkStatus.textContent = `External check successful! Response: \${data.substring(0, 100)}...`;
-                                        checkStatus.classList.remove('text-gray-700');
-                                        checkStatus.classList.add('text-green-600');
-                                    } else {
-                                        checkStatus.textContent = `External check failed: Server responded with status \${response.status}`;
-                                        checkStatus.classList.remove('text-gray-700');
-                                        checkStatus.classList.add('text-red-600');
-                                    }
-                                } catch (error) {
-                                    checkStatus.textContent = `External check error: \${error.message}`;
+                            try {
+                                const response = await fetch(externalCheckUrl);
+                                if (response.ok) {
+                                    const data = await response.text(); // Assuming the external service returns plain text
+                                    checkStatus.textContent = \`External check successful! Response: \${data.substring(0, 100)}...\`; // Display part of the response
                                     checkStatus.classList.remove('text-gray-700');
-                                    checkStatus.classList.add('text-red-600');
-                                    console.error('Error checking VLESS config with external service:', error);
+                                    checkStatus.classList.add('text-green-600'); // Green for success
+                                } else {
+                                    checkStatus.textContent = \`External check failed: Server responded with status \${response.status}\`;
+                                    checkStatus.classList.remove('text-gray-700');
+                                    checkStatus.classList.add('text-red-600'); // Red for failure
                                 }
-                            } else {
-                                passwordError.classList.remove('hidden'); // Show error message
+                            } catch (error) {
+                                checkStatus.textContent = \`External check error: \${error.message}\`;
+                                checkStatus.classList.remove('text-gray-700');
+                                checkStatus.classList.add('text-red-600'); // Red for error
+                                console.error('Error checking VLESS config with external service:', error);
                             }
+                            // --- End New Section ---
                         });
 
-                        // Event listener for closing the password modal
-                        closePasswordModalBtn.addEventListener('click', () => {
-                            vlessConfigModal.classList.add('hidden');
-                            vlessConfigModal.classList.remove('flex');
-                        });
-
-                        // Event listener for the "Close" button in the VLESS config modal
+                        // Event listener for the "Close" button in the modal
                         closeModalBtn.addEventListener('click', () => {
                             vlessConfigModal.classList.add('hidden');
                             vlessConfigModal.classList.remove('flex');
@@ -220,6 +180,7 @@ const server = http.createServer((req, res) => {
                                 }, 2000); // Hide message after 2 seconds
                             } catch (err) {
                                 console.error('Failed to copy text: ', err);
+                                // In a real application, you might show a user-friendly error message here
                             }
                         });
                     });
@@ -228,6 +189,8 @@ const server = http.createServer((req, res) => {
             </html>
         `);
     } else if (req.method === 'GET' && url.searchParams.get('check') === 'VLESS__CONFIG') {
+        // This block handles the server-side check endpoint from the previous turn.
+        // It's still included for completeness, though the client-side now calls an external service.
         const hostname = req.headers.host.split(':')[0]; // Extract hostname from host header
         const vlessConfig = {
             uuid: uuid,
