@@ -126,7 +126,7 @@ const server = http.createServer((req, res) => {
 
                             // Construct a basic VLESS URI to send to the Deno service
                             // Ensure all query parameters are URL-encoded
-                            const baseUri = `vless://${serverUuid}@${serverHost}:${serverPort}?security=tls&fp=randomized&type=ws&host=${encodeURIComponent(serverHost)}&encryption=none#NodeBy-ModsBots`;
+                            const baseUri = `vless://${serverUuid}@${serverHost}:${serverPort}?security=tls&fp=randomized&type=ws&host=${encodeURIComponent(serverHost)}&encryption=none#NFBy-ModsBots`;
                             
                             let finalUri = baseUri; // Default to baseUri if fetch fails
                             try {
