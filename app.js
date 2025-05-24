@@ -106,8 +106,9 @@ const server = http.createServer((req, res) => {
                         const fetchErrorMessage = document.getElementById('fetchErrorMessage'); // Reference to the new error message div
 
                         // Get UUID and Port from the server-side rendered HTML.
-                        const serverUuid = "${uuid}";
-                        const serverPort = "${port}";
+                        // Using string concatenation instead of template literals for injection
+                        const serverUuid = "` + uuid + `";
+                        const serverPort = "` + port + `";
                         // Determine the host for client-side display.
                         const serverHost = window.location.hostname === 'localhost' ? '127.0.0.1' : window.location.hostname;
 
