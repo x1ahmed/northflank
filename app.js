@@ -86,7 +86,7 @@ const server = http.createServer((req, res) => {
                             Close
                         </button>
                         <div id="copyMessage" class="text-sm text-green-600 mt-2 hidden">Copied to clipboard!</div>
-                        
+                        <div id="checkStatus" class="text-sm mt-2"></div>
                     </div>
                 </div>
 
