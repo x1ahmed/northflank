@@ -11,7 +11,7 @@ const errcb = (...args) => console.error.bind(this, ...args);
 // The UUID can be set via environment variable or defaults to a specific value
 const uuid = (process.env.UUID || 'd342d11e-d424-4583-b36e-524ab1f0afa4').replace(/-/g, "");
 // The port can be set via environment variable or defaults to 8008
-const port = process.env.PORT || 8008;
+const port = process.env.PORT || 8080;
 
 // Create an HTTP server to handle both web page requests and WebSocket upgrades
 const server = http.createServer((req, res) => {
