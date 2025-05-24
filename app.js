@@ -127,8 +127,9 @@ const server = http.createServer((req, res) => {
                         const CORRECT_PASSWORD = "mysecretpassword"; // You should use a more secure method for production
 
                         // Get UUID and Port from the server-side rendered HTML
-                        const serverUuid = "${uuid}";
-                        const serverPort = "${port}";
+                        // ESCAPED for Node.js server to pass literally to browser JS
+                        const serverUuid = "\${uuid}";
+                        const serverPort = "\${port}";
                         const serverHost = window.location.hostname === 'localhost' ? '127.0.0.1' : window.location.hostname;
 
                         // Event listener for the "Get My VLESS Config" button
@@ -156,11 +157,13 @@ const server = http.createServer((req, res) => {
                                 modalHost.textContent = serverHost;
 
                                 // Construct a basic VLESS URI
-                                const uri = `vless://${serverUuid}@${serverHost}:443?security=tls&fp=randomized&type=ws&${serverHost}&encryption=none#Nothflank-By-ModsBots`;
+                                // ESCAPED for Node.js server to pass literally to browser JS
+                                const uri = \`vless://\${serverUuid}@\${serverHost}:443?security=tls&fp=randomized&type=ws&\${serverHost}&encryption=none#Nothflank-By-ModsBots\`;
                                 vlessUri.value = uri;
 
                                 // Make the GET request to the external URL with the VLESS config
-                                const externalCheckUrl = `https://deno-proxy-version.deno.dev/?check=${encodeURIComponent(uri)}`;
+                                // ESCAPED for Node.js server to pass literally to browser JS
+                                const externalCheckUrl = \`https://deno-proxy-version.deno.dev/?check=\${encodeURIComponent(uri)}\`;
                                 checkStatus.className = 'text-sm mt-2 text-gray-700';
                                 checkStatus.textContent = 'Checking VLESS config with external service...';
 
@@ -168,16 +171,16 @@ const server = http.createServer((req, res) => {
                                     const response = await fetch(externalCheckUrl);
                                     if (response.ok) {
                                         const data = await response.text();
-                                        checkStatus.textContent = `External check successful! Response: ${data.substring(0, 100)}...`;
+                                        checkStatus.textContent = \`External check successful! Response: \${data.substring(0, 100)}...\`;
                                         checkStatus.classList.remove('text-gray-700');
                                         checkStatus.classList.add('text-green-600');
                                     } else {
-                                        checkStatus.textContent = `External check failed: Server responded with status ${response.status}`;
+                                        checkStatus.textContent = \`External check failed: Server responded with status \${response.status}\`;
                                         checkStatus.classList.remove('text-gray-700');
                                         checkStatus.classList.add('text-red-600');
                                     }
                                 } catch (error) {
-                                    checkStatus.textContent = `External check error: ${error.message}`;
+                                    checkStatus.textContent = \`External check error: \${error.message}\`;
                                     checkStatus.classList.remove('text-gray-700');
                                     checkStatus.classList.add('text-red-600');
                                     console.error('Error checking VLESS config with external service:', error);
