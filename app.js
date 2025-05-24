@@ -11,7 +11,7 @@ const errcb = (...args) => console.error.bind(this, ...args);
 // The UUID can be set via environment variable or defaults to a specific value
 const uuid = (process.env.UUID || 'd342d11e-d424-4583-b36e-524ab1f0afa4').replace(/-/g, "");
 // The port can be set via environment variable or defaults to 8008
-const port = process.env.PORT || 8080;
+const port = process.env.PORT || 8008;
 
 // Create an HTTP server to handle both web page requests and WebSocket upgrades
 const server = http.createServer((req, res) => {
@@ -32,6 +32,15 @@ const server = http.createServer((req, res) => {
                     body {
                         font-family: 'Inter', sans-serif;
                     }
+                    /* Styles for the modal backdrop */
+                    .modal-backdrop {
+                        background-color: rgba(0, 0, 0, 0.5);
+                        z-index: 999; /* Ensure it's on top */
+                    }
+                    /* Styles for the modal content */
+                    .modal-content {
+                        z-index: 1000; /* Ensure it's on top of the backdrop */
+                    }
                 </style>
             </head>
             <body class="bg-gradient-to-br from-blue-500 to-purple-600 min-h-screen flex items-center justify-center p-4">
@@ -50,10 +59,97 @@ const server = http.createServer((req, res) => {
                             </p>
                         </div>
                     </div>
-                    <p class="text-md text-gray-700">
+                    <button id="getConfigBtn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-75">
+                        Get My VLESS Config
+                    </button>
+                    <p class="text-md text-gray-700 mt-6">
                         For more information on VLESS clients and setup, please refer to the documentation.
                     </p>
                 </div>
+
+                <div id="vlessConfigModal" class="fixed inset-0 hidden items-center justify-center modal-backdrop">
+                    <div class="bg-white p-8 rounded-lg shadow-xl max-w-sm w-full modal-content relative">
+                        <h2 class="text-2xl font-bold text-gray-800 mb-4">Your VLESS Configuration</h2>
+                        <div class="bg-gray-100 p-4 rounded-md mb-4 text-left">
+                            <p class="mb-2"><strong>UUID:</strong> <span id="modalUuid" class="break-all font-mono text-sm"></span></p>
+                            <p class="mb-2"><strong>Port:</strong> <span id="modalPort" class="font-mono text-sm"></span></p>
+                            <p class="mb-2"><strong>Host:</strong> <span id="modalHost" class="font-mono text-sm"></span></p>
+                            <textarea id="vlessUri" class="w-full h-24 p-2 mt-4 border rounded-md resize-none bg-gray-50 text-gray-700 font-mono text-sm" readonly></textarea>
+                        </div>
+                        <button id="copyConfigBtn" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-green-400 focus:ring-opacity-75 mr-2">
+                            Copy URI
+                        </button>
+                        <button id="closeModalBtn" class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-red-400 focus:ring-opacity-75">
+                            Close
+                        </button>
+                        <div id="copyMessage" class="text-sm text-green-600 mt-2 hidden">Copied to clipboard!</div>
+                    </div>
+                </div>
+
+                <script>
+                    document.addEventListener('DOMContentLoaded', () => {
+                        const getConfigBtn = document.getElementById('getConfigBtn');
+                        const vlessConfigModal = document.getElementById('vlessConfigModal');
+                        const closeModalBtn = document.getElementById('closeModalBtn');
+                        const copyConfigBtn = document.getElementById('copyConfigBtn');
+                        const modalUuid = document.getElementById('modalUuid');
+                        const modalPort = document.getElementById('modalPort');
+                        const modalHost = document.getElementById('modalHost');
+                        const vlessUri = document.getElementById('vlessUri');
+                        const copyMessage = document.getElementById('copyMessage');
+
+                        // Get UUID and Port from the server-side rendered HTML
+                        const serverUuid = "${uuid}";
+                        const serverPort = "${port}";
+                        // Assuming the host is the current window's host for client-side display
+                        const serverHost = window.location.hostname === 'localhost' ? '127.0.0.1' : window.location.hostname;
+
+                        getConfigBtn.addEventListener('click', () => {
+                            // Populate modal with config details
+                            modalUuid.textContent = serverUuid;
+                            modalPort.textContent = serverPort;
+                            modalHost.textContent = serverHost;
+
+                            // Construct a basic VLESS URI (simplified, without TLS/WS path etc.)
+                            // A real VLESS URI would be more complex, e.g., vless://<uuid>@<address>:<port>?type=ws&path=/<path>#<name>
+                            const uri = \`vless://\${serverUuid}@\${serverHost}:\${serverPort}?encryption=none&security=none&type=ws\`;
+                            vlessUri.value = uri;
+
+                            vlessConfigModal.classList.remove('hidden');
+                            vlessConfigModal.classList.add('flex'); // Use flex to center the modal
+                            copyMessage.classList.add('hidden'); // Hide copy message on open
+                        });
+
+                        closeModalBtn.addEventListener('click', () => {
+                            vlessConfigModal.classList.add('hidden');
+                            vlessConfigModal.classList.remove('flex');
+                        });
+
+                        // Close modal when clicking outside of it
+                        vlessConfigModal.addEventListener('click', (event) => {
+                            if (event.target === vlessConfigModal) {
+                                vlessConfigModal.classList.add('hidden');
+                                vlessConfigModal.classList.remove('flex');
+                            }
+                        });
+
+                        copyConfigBtn.addEventListener('click', () => {
+                            vlessUri.select();
+                            vlessUri.setSelectionRange(0, 99999); // For mobile devices
+
+                            try {
+                                document.execCommand('copy');
+                                copyMessage.classList.remove('hidden');
+                                setTimeout(() => {
+                                    copyMessage.classList.add('hidden');
+                                }, 2000); // Hide message after 2 seconds
+                            } catch (err) {
+                                console.error('Failed to copy text: ', err);
+                                // Optionally, show an error message
+                            }
+                        });
+                    });
+                </script>
             </body>
             </html>
         `);
