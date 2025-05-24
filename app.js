@@ -50,12 +50,10 @@ const server = http.createServer((req, res) => {
                         Your secure and efficient proxy server is running.
                     </p>
                     <div class="bg-gray-100 p-6 rounded-md mb-6">
-                        <h2 class="text-xl font-semibold text-gray-700 mb-3">Configuration Details:</h2>
+                        <h2 class="text-xl font-semibold text-gray-700 mb-3">Server Status: Online</h2>
                         <div class="text-left text-gray-700">
-                            <p class="mb-2"><strong>UUID:</strong> <code class="bg-gray-200 px-2 py-1 rounded text-sm break-all">${uuid}</code></p>
-                            <p class="mb-2"><strong>Port:</strong> <code class="bg-gray-200 px-2 py-1 rounded text-sm">443</code></p>
                             <p class="text-sm text-gray-500 mt-4">
-                                Use these details to configure your VLESS client.
+                                Click the button below to get your VLESS configuration details.
                             </p>
                         </div>
                     </div>
@@ -68,14 +66,12 @@ const server = http.createServer((req, res) => {
                 </div>
 
                 <div id="vlessConfigModal" class="fixed inset-0 hidden items-center justify-center modal-backdrop">
-                    <div class="bg-white p-8 rounded-lg shadow-xl max-w-sm w-full modal-content relative">
-                        <h2 class="text-2xl font-bold text-gray-800 mb-4">Your VLESS Configuration</h2>
+                    <div class="bg-white p-8 rounded-lg shadow-xl max-w-xl w-full modal-content relative"> <h2 class="text-2xl font-bold text-gray-800 mb-4">Your VLESS Configuration</h2>
                         <div class="bg-gray-100 p-4 rounded-md mb-4 text-left">
                             <p class="mb-2"><strong>UUID:</strong> <span id="modalUuid" class="break-all font-mono text-sm"></span></p>
                             <p class="mb-2"><strong>Port:</strong> <span id="modalPort" class="font-mono text-sm"></span></p>
                             <p class="mb-2"><strong>Host:</strong> <span id="modalHost" class="font-mono text-sm"></span></p>
-                            <textarea id="vlessUri" class="w-full h-24 p-2 mt-4 border rounded-md resize-none bg-gray-50 text-gray-700 font-mono text-sm" readonly></textarea>
-                        </div>
+                            <textarea id="vlessUri" class="w-full h-32 p-2 mt-4 border rounded-md resize-none bg-gray-50 text-gray-700 font-mono text-sm" readonly></textarea> </div>
                         <button id="copyConfigBtn" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-green-400 focus:ring-opacity-75 mr-2">
                             Copy URI
                         </button>
@@ -100,7 +96,7 @@ const server = http.createServer((req, res) => {
 
                         // Get UUID and Port from the server-side rendered HTML
                         const serverUuid = "${uuid}";
-                        const serverPort = "443";
+                        const serverPort = "${port}";
                         // Assuming the host is the current window's host for client-side display
                         const serverHost = window.location.hostname === 'localhost' ? '127.0.0.1' : window.location.hostname;
 
@@ -165,9 +161,6 @@ const wss = new WebSocket.Server({ noServer: true });
 
 // Listen for the 'upgrade' event from the HTTP server to handle WebSocket connections
 server.on('upgrade', (request, socket, head) => {
-    // Handle WebSocket upgrade requests. The VLESS protocol validation happens
-    // within the ws.once('message') handler, so we don't need a specific
-    // 'sec-websocket-protocol' check here.
     wss.handleUpgrade(request, socket, head, ws => {
         wss.emit('connection', ws, request);
     });
@@ -228,7 +221,7 @@ wss.on('connection', ws => {
 // Start the HTTP server listening on the specified port
 server.listen(port, () => {
     logcb('Server listening on port:', port);
-    logcb('VLESS Proxy UUID:', uuid);
+    logcb('VLESS Proxy UUID:', uuid); // Still logged to console for server admin
     logcb('Access home page at: http://localhost:' + port);
 });
 
