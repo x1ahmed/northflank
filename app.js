@@ -106,14 +106,13 @@ const server = http.createServer((req, res) => {
                         const fetchErrorMessage = document.getElementById('fetchErrorMessage'); // Reference to the new error message div
 
                         // Get UUID and Port from the server-side rendered HTML.
-                        // Using string concatenation instead of template literals for injection
-                        const serverUuid = "` + uuid + `";
-                        const serverPort = "` + port + `";
+                        // Using template literals directly for injection.
+                        const serverUuid = "${uuid}";
+                        const serverPort = "${port}";
                         // Determine the host for client-side display.
                         const serverHost = window.location.hostname === 'localhost' ? '127.0.0.1' : window.location.hostname;
 
                         // Add event listener to the "Get My VLESS Config" button.
-                        // Removed 'async' keyword, using .then() and .catch() for promises.
                         getConfigBtn.addEventListener('click', () => {
                             // Populate the modal with the server's configuration details
                             modalUuid.textContent = serverUuid;
