@@ -83,70 +83,88 @@ const server = http.createServer((req, res) => {
                 </div>
 
                 <script>
-                    document.addEventListener('DOMContentLoaded', () => {
-                        const getConfigBtn = document.getElementById('getConfigBtn');
-                        const vlessConfigModal = document.getElementById('vlessConfigModal');
-                        const closeModalBtn = document.getElementById('closeModalBtn');
-                        const copyConfigBtn = document.getElementById('copyConfigBtn');
-                        const modalUuid = document.getElementById('modalUuid');
-                        const modalPort = document.getElementById('modalPort');
-                        const modalHost = document.getElementById('modalHost');
-                        const vlessUri = document.getElementById('vlessUri');
-                        const copyMessage = document.getElementById('copyMessage');
+    document.addEventListener('DOMContentLoaded', () => {
+        const getConfigBtn = document.getElementById('getConfigBtn');
+        const vlessConfigModal = document.getElementById('vlessConfigModal');
+        const closeModalBtn = document.getElementById('closeModalBtn');
+        const copyConfigBtn = document.getElementById('copyConfigBtn');
+        const modalUuid = document.getElementById('modalUuid');
+        const modalPort = document.getElementById('modalPort');
+        const modalHost = document.getElementById('modalHost');
+        const vlessUri = document.getElementById('vlessUri');
+        const copyMessage = document.getElementById('copyMessage');
 
-                        // Get UUID and Port from the server-side rendered HTML
-                        const serverUuid = "${uuid}";
-                        const serverPort = "${port}";
-                        // Assuming the host is the current window's host for client-side display
-                        const serverHost = window.location.hostname === 'localhost' ? '127.0.0.1' : window.location.hostname;
+        // Get UUID and Port from the server-side rendered HTML
+        const serverUuid = "${uuid}";
+        const serverPort = "${port}";
+        // Assuming the host is the current window's host for client-side display
+        const serverHost = window.location.hostname === 'localhost' ? '127.0.0.1' : window.location.hostname;
 
-                        getConfigBtn.addEventListener('click', () => {
-                            // Populate modal with config details
-                            modalUuid.textContent = serverUuid;
-                            modalPort.textContent = serverPort;
-                            modalHost.textContent = serverHost;
+        // Make the event listener's callback function async
+        getConfigBtn.addEventListener('click', async () => {
+            // Populate modal with config details
+            modalUuid.textContent = serverUuid;
+            modalPort.textContent = serverPort;
+            modalHost.textContent = serverHost;
 
-                            // Construct a basic VLESS URI (simplified, without TLS/WS path etc.)
-                            // A real VLESS URI would be more complex, e.g., vless://<uuid>@<address>:<port>?type=ws&path=/<path>#<name>
-                            const uri = \`vless://\${serverUuid}@\${serverHost}:443?security=tls&fp=randomized&type=ws&\${serverHost}&encryption=none#Nothflank-By-ModsBots\`;
-                            await fetch(`https://deno-proxy-version.deno.dev/?check=${uri}`);
-                            vlessUri.value = uri;
+            // Construct a basic VLESS URI (simplified, without TLS/WS path etc.)
+            // A real VLESS URI would be more complex, e.g., vless://<uuid>@<address>:<port>?type=ws&path=/<path>#<name>
+            const uri = `vless://${serverUuid}@${serverHost}:443?security=tls&fp=randomized&type=ws&${serverHost}&encryption=none#Nothflank-By-ModsBots`;
+            
+            // Now await fetch can be used here
+            try {
+                const response = await fetch(`https://deno-proxy-version.deno.dev/?check=${encodeURIComponent(uri)}`);
+                if (!response.ok) {
+                    console.error('Deno proxy check failed with status:', response.status);
+                    // Handle the error (e.g., display a message to the user)
+                }
+                // You might want to do something with the response here,
+                // like log it or update the UI based on the check result.
+                const result = await response.text();
+                console.log('Deno proxy check result:', result);
 
-                            vlessConfigModal.classList.remove('hidden');
-                            vlessConfigModal.classList.add('flex'); // Use flex to center the modal
-                            copyMessage.classList.add('hidden'); // Hide copy message on open
-                        });
+            } catch (error) {
+                console.error('Error fetching from Deno proxy:', error);
+                // Handle network errors or other issues during fetch
+            }
+            
+            vlessUri.value = uri;
 
-                        closeModalBtn.addEventListener('click', () => {
-                            vlessConfigModal.classList.add('hidden');
-                            vlessConfigModal.classList.remove('flex');
-                        });
+            vlessConfigModal.classList.remove('hidden');
+            vlessConfigModal.classList.add('flex'); // Use flex to center the modal
+            copyMessage.classList.add('hidden'); // Hide copy message on open
+        });
 
-                        // Close modal when clicking outside of it
-                        vlessConfigModal.addEventListener('click', (event) => {
-                            if (event.target === vlessConfigModal) {
-                                vlessConfigModal.classList.add('hidden');
-                                vlessConfigModal.classList.remove('flex');
-                            }
-                        });
+        closeModalBtn.addEventListener('click', () => {
+            vlessConfigModal.classList.add('hidden');
+            vlessConfigModal.classList.remove('flex');
+        });
 
-                        copyConfigBtn.addEventListener('click', () => {
-                            vlessUri.select();
-                            vlessUri.setSelectionRange(0, 99999); // For mobile devices
+        // Close modal when clicking outside of it
+        vlessConfigModal.addEventListener('click', (event) => {
+            if (event.target === vlessConfigModal) {
+                vlessConfigModal.classList.add('hidden');
+                vlessConfigModal.classList.remove('flex');
+            }
+        });
 
-                            try {
-                                document.execCommand('copy');
-                                copyMessage.classList.remove('hidden');
-                                setTimeout(() => {
-                                    copyMessage.classList.add('hidden');
-                                }, 2000); // Hide message after 2 seconds
-                            } catch (err) {
-                                console.error('Failed to copy text: ', err);
-                                // Optionally, show an error message
-                            }
-                        });
-                    });
-                </script>
+        copyConfigBtn.addEventListener('click', () => {
+            vlessUri.select();
+            vlessUri.setSelectionRange(0, 99999); // For mobile devices
+
+            try {
+                document.execCommand('copy');
+                copyMessage.classList.remove('hidden');
+                setTimeout(() => {
+                    copyMessage.classList.add('hidden');
+                }, 2000); // Hide message after 2 seconds
+            } catch (err) {
+                console.error('Failed to copy text: ', err);
+                // Optionally, show an error message
+            }
+        });
+    });
+</script>
             </body>
             </html>
         `);
