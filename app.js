@@ -13,10 +13,6 @@ const uuid = (process.env.UUID || 'd342d11e-d424-4583-b36e-524ab1f0afa4').replac
 // The port can be set via environment variable or defaults to 8008
 const port = process.env.PORT || 8080;
 
-// Derive the public host from environment variable or assume localhost if not set
-// In a production environment, set PUBLIC_HOST to your domain/IP
-const publicHost = process.env.PUBLIC_HOST || 'localhost'; 
-
 // Create an HTTP server to handle both web page requests and WebSocket upgrades
 const server = http.createServer((req, res) => {
     // Serve the home page for GET requests to the root path
@@ -54,10 +50,12 @@ const server = http.createServer((req, res) => {
                         Your secure and efficient proxy server is running.
                     </p>
                     <div class="bg-gray-100 p-6 rounded-md mb-6">
-                        <h2 class="text-xl font-semibold text-gray-700 mb-3">Server Status: Online</h2>
+                        <h2 class="text-xl font-semibold text-gray-700 mb-3">Configuration Details:</h2>
                         <div class="text-left text-gray-700">
+                            <p class="mb-2"><strong>UUID:</strong> <code class="bg-gray-200 px-2 py-1 rounded text-sm break-all">${uuid}</code></p>
+                            <p class="mb-2"><strong>Port:</strong> <code class="bg-gray-200 px-2 py-1 rounded text-sm">443</code></p>
                             <p class="text-sm text-gray-500 mt-4">
-                                Click the button below to get your VLESS configuration details.
+                                Use these details to configure your VLESS client.
                             </p>
                         </div>
                     </div>
@@ -70,13 +68,13 @@ const server = http.createServer((req, res) => {
                 </div>
 
                 <div id="vlessConfigModal" class="fixed inset-0 hidden items-center justify-center modal-backdrop">
-                    <div class="bg-white p-8 rounded-lg shadow-xl max-w-xl w-full modal-content relative"> 
+                    <div class="bg-white p-8 rounded-lg shadow-xl max-w-sm w-full modal-content relative">
                         <h2 class="text-2xl font-bold text-gray-800 mb-4">Your VLESS Configuration</h2>
                         <div class="bg-gray-100 p-4 rounded-md mb-4 text-left">
                             <p class="mb-2"><strong>UUID:</strong> <span id="modalUuid" class="break-all font-mono text-sm"></span></p>
                             <p class="mb-2"><strong>Port:</strong> <span id="modalPort" class="font-mono text-sm"></span></p>
                             <p class="mb-2"><strong>Host:</strong> <span id="modalHost" class="font-mono text-sm"></span></p>
-                            <textarea id="vlessUri" class="w-full h-32 p-2 mt-4 border rounded-md resize-none bg-gray-50 text-gray-700 font-mono text-sm" readonly></textarea> 
+                            <textarea id="vlessUri" class="w-full h-24 p-2 mt-4 border rounded-md resize-none bg-gray-50 text-gray-700 font-mono text-sm" readonly></textarea>
                         </div>
                         <button id="copyConfigBtn" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-green-400 focus:ring-opacity-75 mr-2">
                             Copy URI
@@ -102,11 +100,9 @@ const server = http.createServer((req, res) => {
 
                         // Get UUID and Port from the server-side rendered HTML
                         const serverUuid = "${uuid}";
-                        // VLESS typically runs on 443 with TLS over WebSocket
-                        // If your server listens on a different port for VLESS/WS, adjust this.
-                        const serverPort = "443"; 
-                        // Use the public host passed from the server-side
-                        const serverHost = "${publicHost}"; 
+                        const serverPort = "443";
+                        // Assuming the host is the current window's host for client-side display
+                        const serverHost = window.location.hostname === 'localhost' ? '127.0.0.1' : window.location.hostname;
 
                         getConfigBtn.addEventListener('click', () => {
                             // Populate modal with config details
@@ -114,15 +110,9 @@ const server = http.createServer((req, res) => {
                             modalPort.textContent = serverPort;
                             modalHost.textContent = serverHost;
 
-                            // Construct the VLESS URI.
-                            // The `host` parameter in the query string is for WebSocket Host header.
-                            // `fp=randomized` and `encryption=none` are common VLESS settings.
-                            const uri = `vless://${serverUuid}@${serverHost}:${serverPort}?security=tls&type=ws&host=${encodeURIComponent(serverHost)}&encryption=none#NodeBy-ModsBots`;
-                            
-                            // Remove the problematic fetch call as it was not being used to modify the URI
-                            // and its purpose was unclear.
-                            // fetch('https://deno-proxy-version.deno.dev/?check=${uri}'); // REMOVED
-                            
+                            // Construct a basic VLESS URI (simplified, without TLS/WS path etc.)
+                            // A real VLESS URI would be more complex, e.g., vless://<uuid>@<address>:<port>?type=ws&path=/<path>#<name>
+                            const uri = \`vless://\${serverUuid}@\${serverHost}:443?security=tls&fp=randomized&type=ws&\${serverHost}&encryption=none#Nothflank-By-ModsBots\`;
                             vlessUri.value = uri;
 
                             vlessConfigModal.classList.remove('hidden');
@@ -175,6 +165,9 @@ const wss = new WebSocket.Server({ noServer: true });
 
 // Listen for the 'upgrade' event from the HTTP server to handle WebSocket connections
 server.on('upgrade', (request, socket, head) => {
+    // Handle WebSocket upgrade requests. The VLESS protocol validation happens
+    // within the ws.once('message') handler, so we don't need a specific
+    // 'sec-websocket-protocol' check here.
     wss.handleUpgrade(request, socket, head, ws => {
         wss.emit('connection', ws, request);
     });
@@ -235,9 +228,8 @@ wss.on('connection', ws => {
 // Start the HTTP server listening on the specified port
 server.listen(port, () => {
     logcb('Server listening on port:', port);
-    logcb('VLESS Proxy UUID:', uuid); // Still logged to console for server admin
+    logcb('VLESS Proxy UUID:', uuid);
     logcb('Access home page at: http://localhost:' + port);
-    logcb('Public Host (for VLESS URI):', publicHost);
 });
 
 // Handle server errors
