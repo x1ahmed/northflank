@@ -66,7 +66,7 @@ const server = http.createServer((req, res) => {
                         Get My VLESS Config
                     </button>
                     <p class="text-md text-gray-700 mt-6">
-                        For more information on VLESS clients and setup, please refer to the documentation.
+                        Join my Telegram channel for more updates: <a href="https://t.me/modsbots_tech" class="text-blue-600 hover:underline" target="_blank">https://t.me/modsbots_tech</a>
                     </p>
                 </div>
 
@@ -86,7 +86,7 @@ const server = http.createServer((req, res) => {
                             Close
                         </button>
                         <div id="copyMessage" class="text-sm text-green-600 mt-2 hidden">Copied to clipboard!</div>
-                        <div id="checkStatus" class="text-sm mt-2"></div>
+                        
                     </div>
                 </div>
 
@@ -105,7 +105,7 @@ const server = http.createServer((req, res) => {
 
                         // Get UUID and Port from the server-side rendered HTML
                         const serverUuid = "${uuid}";
-                        const serverPort = "${port}";
+                        const serverPort = "443";
                         // Assuming the host is the current window's host for client-side display
                         const serverHost = window.location.hostname === 'localhost' ? '127.0.0.1' : window.location.hostname;
 
