@@ -28,4 +28,4 @@ EXPOSE 8080
 
 # Define the command to run the application
 # Node.js is run in ES module mode, so ensure your main file is .mjs or package.json has "type": "module"
-CMD ["node", "server.js"]
+CMD ["node", "app.js"]
