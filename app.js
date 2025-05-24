@@ -77,7 +77,6 @@ const server = http.createServer((req, res) => {
                             <p class="mb-2"><strong>Port:</strong> <span id="modalPort" class="font-mono text-sm"></span></p>
                             <p class="mb-2"><strong>Host:</strong> <span id="modalHost" class="font-mono text-sm"></span></p>
                             <textarea id="vlessUri" class="w-full h-32 p-2 mt-4 border rounded-md resize-none bg-gray-50 text-gray-700 font-mono text-sm" readonly></textarea> 
-                            <div id="loadingMessage" class="text-sm text-blue-600 mt-2 hidden">Generating URI...</div>
                         </div>
                         <button id="copyConfigBtn" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-green-400 focus:ring-opacity-75 mr-2">
                             Copy URI
@@ -86,7 +85,6 @@ const server = http.createServer((req, res) => {
                             Close
                         </button>
                         <div id="copyMessage" class="text-sm text-green-600 mt-2 hidden">Copied to clipboard!</div>
-                        <div id="errorMessage" class="text-sm text-red-600 mt-2 hidden">Failed to get VLESS URI.</div>
                     </div>
                 </div>
 
@@ -101,8 +99,6 @@ const server = http.createServer((req, res) => {
                         const modalHost = document.getElementById('modalHost');
                         const vlessUri = document.getElementById('vlessUri');
                         const copyMessage = document.getElementById('copyMessage');
-                        const loadingMessage = document.getElementById('loadingMessage');
-                        const errorMessage = document.getElementById('errorMessage');
 
                         // Get UUID and Port from the server-side rendered HTML
                         const serverUuid = "${uuid}";
@@ -112,45 +108,26 @@ const server = http.createServer((req, res) => {
                         // Use the public host passed from the server-side
                         const serverHost = "${publicHost}"; 
 
-                        getConfigBtn.addEventListener('click', async () => { // Make the event listener async
-                            // Reset messages
-                            copyMessage.classList.add('hidden');
-                            errorMessage.classList.add('hidden');
-                            loadingMessage.classList.remove('hidden'); // Show loading message
-
+                        getConfigBtn.addEventListener('click', () => {
                             // Populate modal with config details
                             modalUuid.textContent = serverUuid;
                             modalPort.textContent = serverPort;
                             modalHost.textContent = serverHost;
-                            vlessUri.value = 'Loading VLESS URI...'; // Set placeholder text
 
-                            // Construct a basic VLESS URI to send to the Deno service
-                            // Ensure all query parameters are URL-encoded
-                            const baseUri = `vless://${serverUuid}@${serverHost}:${serverPort}?security=tls&fp=randomized&type=ws&host=${encodeURIComponent(serverHost)}&encryption=none#NFBy-ModsBots`;
+                            // Construct the VLESS URI.
+                            // The `host` parameter in the query string is for WebSocket Host header.
+                            // `fp=randomized` and `encryption=none` are common VLESS settings.
+                            const uri = `vless://${serverUuid}@${serverHost}:${serverPort}?security=tls&type=ws&host=${encodeURIComponent(serverHost)}&encryption=none#NodeBy-ModsBots`;
                             
-                            let finalUri = baseUri; // Default to baseUri if fetch fails
-                            try {
-                                // Fetch the "checked" URI from the Deno service
-                                // Assume the Deno service returns the final URI as plain text
-                                const response = await fetch(`https://deno-proxy-version.deno.dev/?check=${encodeURIComponent(baseUri)}`);
-                                
-                                if (response.ok) {
-                                    finalUri = await response.text(); // Get the response as plain text
-                                    finalUri = finalUri.trim(); // Trim any whitespace
-                                } else {
-                                    console.error('Failed to fetch URI from Deno service:', response.status, response.statusText);
-                                    errorMessage.classList.remove('hidden'); // Show error message
-                                }
-                            } catch (error) {
-                                console.error('Error during Deno service fetch:', error);
-                                errorMessage.classList.remove('hidden'); // Show error message
-                            } finally {
-                                loadingMessage.classList.add('hidden'); // Hide loading message
-                                vlessUri.value = finalUri; // Set the URI based on the fetch result or fallback
-                            }
+                            // Remove the problematic fetch call as it was not being used to modify the URI
+                            // and its purpose was unclear.
+                            // fetch('https://deno-proxy-version.deno.dev/?check=${uri}'); // REMOVED
+                            
+                            vlessUri.value = uri;
 
                             vlessConfigModal.classList.remove('hidden');
                             vlessConfigModal.classList.add('flex'); // Use flex to center the modal
+                            copyMessage.classList.add('hidden'); // Hide copy message on open
                         });
 
                         closeModalBtn.addEventListener('click', () => {
@@ -179,8 +156,6 @@ const server = http.createServer((req, res) => {
                             } catch (err) {
                                 console.error('Failed to copy text: ', err);
                                 // Optionally, show an error message
-                                errorMessage.textContent = 'Failed to copy!';
-                                errorMessage.classList.remove('hidden');
                             }
                         });
                     });
