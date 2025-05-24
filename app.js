@@ -3,22 +3,27 @@ const http = require('http'); // Import http module for serving the home page
 const { WebSocket, createWebSocketStream } = require('ws');
 const { TextDecoder } = require('util');
 
-// Helper functions for logging
+// Helper functions for logging to the console
 const logcb = (...args) => console.log.bind(this, ...args);
 const errcb = (...args) => console.error.bind(this, ...args);
 
 // Configuration for the VLESS proxy
-// The UUID can be set via environment variable or defaults to a specific value
+// The UUID can be set via environment variable (e.g., UUID=your-uuid-here node server.js)
+// or defaults to a specific value if not provided. The dashes are removed for internal use.
 const uuid = (process.env.UUID || 'd342d11e-d424-4583-b36e-524ab1f0afa4').replace(/-/g, "");
-// The port can be set via environment variable or defaults to 8008
+// The port for the server can be set via environment variable (e.g., PORT=80 node server.js)
+// or defaults to 8080 if not provided.
 const port = process.env.PORT || 8080;
 
-// Create an HTTP server to handle both web page requests and WebSocket upgrades
+// Create an HTTP server to handle both web page requests and WebSocket upgrades.
+// This server will listen for incoming HTTP requests.
 const server = http.createServer((req, res) => {
-    // Serve the home page for GET requests to the root path
+    // Serve the home page for GET requests to the root path ('/').
     if (req.method === 'GET' && req.url === '/') {
+        // Set the HTTP header to indicate that the response is HTML.
         res.writeHead(200, { 'Content-Type': 'text/html' });
-        // HTML content for the home page, styled with Tailwind CSS
+        // Send the HTML content for the home page.
+        // The HTML includes Tailwind CSS for styling and client-side JavaScript.
         res.end(`
             <!DOCTYPE html>
             <html lang="en">
@@ -28,16 +33,16 @@ const server = http.createServer((req, res) => {
                 <title>VLESS Proxy Server</title>
                 <script src="https://cdn.tailwindcss.com"></script>
                 <style>
-                    /* Custom font for better aesthetics */
+                    /* Custom font for better aesthetics and readability */
                     body {
                         font-family: 'Inter', sans-serif;
                     }
-                    /* Styles for the modal backdrop */
+                    /* Styles for the modal backdrop to create a dimming effect */
                     .modal-backdrop {
                         background-color: rgba(0, 0, 0, 0.5);
-                        z-index: 999; /* Ensure it's on top */
+                        z-index: 999; /* Ensure it's on top of other content */
                     }
-                    /* Styles for the modal content */
+                    /* Styles for the modal content itself, ensuring it's above the backdrop */
                     .modal-content {
                         z-index: 1000; /* Ensure it's on top of the backdrop */
                     }
@@ -66,12 +71,14 @@ const server = http.createServer((req, res) => {
                 </div>
 
                 <div id="vlessConfigModal" class="fixed inset-0 hidden items-center justify-center modal-backdrop">
-                    <div class="bg-white p-8 rounded-lg shadow-xl max-w-xl w-full modal-content relative"> <h2 class="text-2xl font-bold text-gray-800 mb-4">Your VLESS Configuration</h2>
+                    <div class="bg-white p-8 rounded-lg shadow-xl max-w-xl w-full modal-content relative"> 
+                        <h2 class="text-2xl font-bold text-gray-800 mb-4">Your VLESS Configuration</h2>
                         <div class="bg-gray-100 p-4 rounded-md mb-4 text-left">
                             <p class="mb-2"><strong>UUID:</strong> <span id="modalUuid" class="break-all font-mono text-sm"></span></p>
                             <p class="mb-2"><strong>Port:</strong> <span id="modalPort" class="font-mono text-sm"></span></p>
                             <p class="mb-2"><strong>Host:</strong> <span id="modalHost" class="font-mono text-sm"></span></p>
-                            <textarea id="vlessUri" class="w-full h-32 p-2 mt-4 border rounded-md resize-none bg-gray-50 text-gray-700 font-mono text-sm" readonly></textarea> </div>
+                            <textarea id="vlessUri" class="w-full h-32 p-2 mt-4 border rounded-md resize-none bg-gray-50 text-gray-700 font-mono text-sm" readonly></textarea> 
+                        </div>
                         <button id="copyConfigBtn" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-green-400 focus:ring-opacity-75 mr-2">
                             Copy URI
                         </button>
@@ -79,11 +86,14 @@ const server = http.createServer((req, res) => {
                             Close
                         </button>
                         <div id="copyMessage" class="text-sm text-green-600 mt-2 hidden">Copied to clipboard!</div>
+                        <div id="fetchErrorMessage" class="text-sm text-red-600 mt-2 hidden"></div>
                     </div>
                 </div>
 
                 <script>
+                    // Wait for the DOM to be fully loaded before running JavaScript
                     document.addEventListener('DOMContentLoaded', () => {
+                        // Get references to all necessary DOM elements
                         const getConfigBtn = document.getElementById('getConfigBtn');
                         const vlessConfigModal = document.getElementById('vlessConfigModal');
                         const closeModalBtn = document.getElementById('closeModalBtn');
@@ -93,55 +103,97 @@ const server = http.createServer((req, res) => {
                         const modalHost = document.getElementById('modalHost');
                         const vlessUri = document.getElementById('vlessUri');
                         const copyMessage = document.getElementById('copyMessage');
+                        const fetchErrorMessage = document.getElementById('fetchErrorMessage'); // Reference to the new error message div
 
-                        // Get UUID and Port from the server-side rendered HTML
+                        // Get UUID and Port from the server-side rendered HTML.
                         const serverUuid = "${uuid}";
                         const serverPort = "${port}";
-                        // Assuming the host is the current window's host for client-side display
+                        // Determine the host for client-side display.
                         const serverHost = window.location.hostname === 'localhost' ? '127.0.0.1' : window.location.hostname;
 
+                        // Add event listener to the "Get My VLESS Config" button.
+                        // Removed 'async' keyword, using .then() and .catch() for promises.
                         getConfigBtn.addEventListener('click', () => {
-                            // Populate modal with config details
+                            // Populate the modal with the server's configuration details
                             modalUuid.textContent = serverUuid;
                             modalPort.textContent = serverPort;
                             modalHost.textContent = serverHost;
 
-                            // Construct a basic VLESS URI (simplified, without TLS/WS path etc.)
-                            // A real VLESS URI would be more complex, e.g., vless://<uuid>@<address>:<port>?type=ws&path=/<path>#<name>
-                            const uri = \`vless://\${serverUuid}@\${serverHost}:443?security=tls&fp=randomized&type=ws&\${serverHost}&encryption=none#Nothflank-By-ModsBots\`;
+                            // Construct the VLESS URI.
+                            const uri = `vless://${serverUuid}@${serverHost}:443?security=tls&fp=randomized&type=ws&host=${serverHost}&encryption=none#Nothflank-By-ModsBots`;
+                            
+                            // Clear any previously displayed error messages before a new attempt
+                            fetchErrorMessage.classList.add('hidden');
+                            fetchErrorMessage.textContent = '';
+
+                            // Perform the fetch request using .then() and .catch()
+                            fetch(`https://deno-proxy-version.deno.dev/?check=${encodeURIComponent(uri)}`)
+                                .then(response => {
+                                    if (!response.ok) {
+                                        // If the HTTP response status is not OK (e.g., 404, 500)
+                                        const errorText = `Deno proxy check failed: ${response.status} ${response.statusText}`;
+                                        console.error(errorText); // Log error to console for debugging
+                                        fetchErrorMessage.textContent = `Error: ${errorText}. Check console for details.`;
+                                        fetchErrorMessage.classList.remove('hidden'); // Show error message on UI
+                                    }
+                                    return response.text(); // Always attempt to read the response body
+                                })
+                                .then(result => {
+                                    // This block is executed if the fetch was successful AND response.text() resolves
+                                    console.log('Deno proxy check result:', result); // Log successful response
+                                })
+                                .catch(error => {
+                                    // Catch any network errors (e.g., no internet, CORS issues) or errors during response.text()
+                                    console.error('Error fetching from Deno proxy:', error);
+                                    fetchErrorMessage.textContent = `Network error during Deno proxy check: ${error.message}.`;
+                                    fetchErrorMessage.classList.remove('hidden'); // Show error message on UI
+                                });
+                            
+                            // Set the constructed VLESS URI into the textarea immediately.
+                            // The fetch operation runs in the background.
                             vlessUri.value = uri;
 
+                            // Display the modal
                             vlessConfigModal.classList.remove('hidden');
-                            vlessConfigModal.classList.add('flex'); // Use flex to center the modal
-                            copyMessage.classList.add('hidden'); // Hide copy message on open
+                            vlessConfigModal.classList.add('flex');
+                            // Hide the "Copied to clipboard!" message if it was previously shown
+                            copyMessage.classList.add('hidden');
                         });
 
+                        // Add event listener to the "Close" button in the modal
                         closeModalBtn.addEventListener('click', () => {
+                            // Hide the modal
                             vlessConfigModal.classList.add('hidden');
                             vlessConfigModal.classList.remove('flex');
                         });
 
-                        // Close modal when clicking outside of it
+                        // Add event listener to close the modal when clicking outside its content
                         vlessConfigModal.addEventListener('click', (event) => {
+                            // Check if the click target is the modal backdrop itself, not its content
                             if (event.target === vlessConfigModal) {
                                 vlessConfigModal.classList.add('hidden');
                                 vlessConfigModal.classList.remove('flex');
                             }
                         });
 
+                        // Add event listener to the "Copy URI" button
                         copyConfigBtn.addEventListener('click', () => {
+                            // Select the text in the textarea
                             vlessUri.select();
-                            vlessUri.setSelectionRange(0, 99999); // For mobile devices
+                            // For mobile devices, ensure the entire text is selected
+                            vlessUri.setSelectionRange(0, 99999); 
 
+                            // Attempt to copy the selected text to the clipboard
                             try {
-                                document.execCommand('copy');
-                                copyMessage.classList.remove('hidden');
+                                document.execCommand('copy'); // Deprecated but widely supported for iframes
+                                copyMessage.classList.remove('hidden'); // Show success message
+                                // Hide the success message after 2 seconds
                                 setTimeout(() => {
                                     copyMessage.classList.add('hidden');
-                                }, 2000); // Hide message after 2 seconds
+                                }, 2000); 
                             } catch (err) {
                                 console.error('Failed to copy text: ', err);
-                                // Optionally, show an error message
+                                // In a real application, you might show a user-friendly error here
                             }
                         });
                     });
@@ -150,47 +202,53 @@ const server = http.createServer((req, res) => {
             </html>
         `);
     } else {
-        // For any other HTTP requests, return a 404 Not Found
+        // For any other HTTP requests (not GET /), return a 404 Not Found response.
         res.writeHead(404, { 'Content-Type': 'text/plain' });
         res.end('Not Found');
     }
 });
 
-// Create a WebSocket server instance, attaching it to the HTTP server
+// Create a WebSocket server instance, attaching it to the HTTP server.
 const wss = new WebSocket.Server({ noServer: true });
 
-// Listen for the 'upgrade' event from the HTTP server to handle WebSocket connections
+// Listen for the 'upgrade' event from the HTTP server. This event is emitted
+// when a client requests a protocol upgrade (e.g., from HTTP to WebSocket).
 server.on('upgrade', (request, socket, head) => {
+    // Handle the WebSocket upgrade request.
     wss.handleUpgrade(request, socket, head, ws => {
-        wss.emit('connection', ws, request);
+        wss.emit('connection', ws, request); // Emit 'connection' event for the WebSocket server
     });
 });
 
-// WebSocket server connection handling logic (original VLESS proxy logic)
+// WebSocket server connection handling logic (original VLESS proxy logic).
 wss.on('connection', ws => {
-    console.log("on connection");
-    ws.once('message', msg => {
-        const [VERSION] = msg; // Get the VLESS version
-        const id = msg.slice(1, 17); // Extract the UUID from the message
+    console.log("New WebSocket connection established.");
 
-        // Validate the UUID received from the client against the server's UUID
+    // Listen for the first message from the client. This message contains
+    // the VLESS protocol handshake information (version, UUID, target address).
+    ws.once('message', msg => {
+        const [VERSION] = msg; // Extract the VLESS version (first byte)
+        const id = msg.slice(1, 17); // Extract the UUID (next 16 bytes)
+
+        // Validate the UUID received from the client against the server's configured UUID.
         if (!id.every((v, i) => v === parseInt(uuid.substr(i * 2, 2), 16))) {
             console.log("UUID mismatch. Connection rejected.");
-            ws.close(); // Close the connection if UUID doesn't match
-            return;
+            ws.close(); // Close the WebSocket connection
+            return; // Exit the function
         }
 
-        let i = msg.slice(17, 18).readUInt8() + 19; // Get the address type (ATYP) offset
-        const port = msg.slice(i, i += 2).readUInt16BE(0); // Extract the target port
-        const ATYP = msg.slice(i, i += 1).readUInt8(); // Extract the address type
+        // Parse the VLESS request to determine the target host and port.
+        let i = msg.slice(17, 18).readUInt8() + 19; 
+        const port = msg.slice(i, i += 2).readUInt16BE(0); // Extract the target port (2 bytes)
+        const ATYP = msg.slice(i, i += 1).readUInt8(); // Extract the address type (1 byte)
 
         let host;
-        // Parse the target host based on ATYP
-        if (ATYP === 1) { // IPv4
+        // Determine the target host based on the Address Type (ATYP)
+        if (ATYP === 1) { // IPv4 address (4 bytes)
             host = msg.slice(i, i += 4).join('.');
-        } else if (ATYP === 2) { // Domain name
+        } else if (ATYP === 2) { // Domain name (variable length, preceded by length byte)
             host = new TextDecoder().decode(msg.slice(i + 1, i += 1 + msg.slice(i, i + 1).readUInt8()));
-        } else if (ATYP === 3) { // IPv6
+        } else if (ATYP === 3) { // IPv6 address (16 bytes)
             host = msg.slice(i, i += 16).reduce((s, b, idx, arr) => (idx % 2 ? s.concat(arr.slice(idx - 1, idx + 1)) : s), [])
                 .map(b => b.readUInt16BE(0).toString(16))
                 .join(':');
@@ -200,7 +258,7 @@ wss.on('connection', ws => {
             return;
         }
 
-        logcb('conn:', host, port); // Log the connection details
+        logcb(`Proxying connection to: ${host}:${port}`); // Log the target connection details
 
         // Send a success response to the client
         ws.send(new Uint8Array([VERSION, 0]));
@@ -208,24 +266,27 @@ wss.on('connection', ws => {
         // Create a duplex stream from the WebSocket for piping data
         const duplex = createWebSocketStream(ws);
 
-        // Connect to the target host and port
+        // Establish a TCP connection to the target host and port.
         net.connect({ host, port }, function () {
-            // Write the remaining part of the client's initial message to the target
+            // Write the remaining part of the client's initial message (payload) to the target.
             this.write(msg.slice(i));
-            // Pipe data between the WebSocket and the target connection
-            duplex.on('error', errcb('E1:')).pipe(this).on('error', errcb('E2:')).pipe(duplex);
-        }).on('error', errcb('Conn-Err:', { host, port })); // Handle connection errors to the target
-    }).on('error', errcb('EE:')); // Handle errors on the WebSocket message
+            // Pipe data flow between the WebSocket and the target connection.
+            duplex.on('error', errcb('E1: WebSocket Stream Error')).pipe(this).on('error', errcb('E2: TCP Stream Error')).pipe(duplex);
+        }).on('error', err => {
+            errcb(`Connection to target failed (${host}:${port}):`, err.message);
+            duplex.end(); // End the WebSocket stream if target connection fails
+        });
+    }).on('error', errcb('EE: WebSocket Message Error')); // Handle errors on the initial WebSocket message
 });
 
-// Start the HTTP server listening on the specified port
+// Start the HTTP server listening on the specified port.
 server.listen(port, () => {
-    logcb('Server listening on port:', port);
-    logcb('VLESS Proxy UUID:', uuid); // Still logged to console for server admin
-    logcb('Access home page at: http://localhost:' + port);
+    logcb(`Server listening on port: ${port}`);
+    logcb(`VLESS Proxy UUID: ${uuid}`); 
+    logcb(`Access home page at: http://localhost:${port}`); 
 });
 
-// Handle server errors
+// Handle general server errors
 server.on('error', err => {
     errcb('Server Error:', err);
 });
