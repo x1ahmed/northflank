@@ -19,8 +19,7 @@ COPY server.js .
 # Copy the configuration and usage files if they exist
 # These files will be created by the application if they don't exist,
 # but copying them ensures persistence if the image is rebuilt with existing data.
-COPY config.json ./ || true
-COPY usage.json ./ || true
+
 
 # Expose the port that the Node.js server listens on
 # This port (8080) is derived from the selected code snippet in your Node.js application.
