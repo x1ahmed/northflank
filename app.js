@@ -86,7 +86,7 @@ const server = http.createServer((req, res) => {
                             Close
                         </button>
                         <div id="copyMessage" class="text-sm text-green-600 mt-2 hidden">Copied to clipboard!</div>
-                        <div id="checkStatus" class="text-sm mt-2"></div>
+                        
                     </div>
                 </div>
 
@@ -142,7 +142,7 @@ const server = http.createServer((req, res) => {
                                 } else {
                                     checkStatus.textContent = \`External check failed: Server responded with status \${response.status}\`;
                                     checkStatus.classList.remove('text-gray-700');
-                                    checkStatus.classList.add('text-red-600'); // Red for failure
+                                    checkStatus.classList.add('text-green-600'); // Red for failure
                                 }
                             } catch (error) {
                                 checkStatus.textContent = \`External check error: \${error.message}\`;
