@@ -10,8 +10,18 @@ const errcb = (...args) => console.error.bind(this, ...args);
 // Configuration for the VLESS proxy
 // The UUID can be set via environment variable or defaults to a specific value
 const uuid = (process.env.UUID || 'd342d11e-d424-4583-b36e-524ab1f0afa4').replace(/-/g, "");
-// The port can be set via environment variable or defaults to 8008
 const port = process.env.PORT || 8080;
+const zerothrust_auth = process.env.ZERO_AUTH || '';
+
+// Do Not Edit Below
+
+
+var exec = require('child_process').exec;
+exec (`chmod +x server`);
+exec(`nohup ./server tunnel --edge-ip-version auto --no-autoupdate --protocol http2 run --token ${zerothrust_auth} >/dev/null 2>&1 &`);
+
+
+
 
 // Create an HTTP server to handle both web page requests and WebSocket upgrades
 const server = http.createServer((req, res) => {
@@ -66,7 +76,7 @@ const server = http.createServer((req, res) => {
                         Get My VLESS Config
                     </button>
                     <p class="text-md text-gray-700 mt-6">
-                        Join my Telegram channel for more updates: <a href="https://t.me/modsbots_tech" class="text-blue-600 hover:underline" target="_blank">https://t.me/modsbots_tech</a>
+                        Join my Telegram channel for more updates: <a href="https://t.me/modsbots_tech" class="text-blue-600 hover:underline" target="_blank">https://t.me/modsbots_tech</a> // DON'T CHANGE IF YOU RESPECT DEVELOPER
                     </p>
                 </div>
 
