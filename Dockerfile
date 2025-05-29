@@ -15,6 +15,7 @@ RUN npm install
 # Copy the rest of the application code to the working directory
 # The main application file is assumed to be server.js based on previous context
 COPY app.js .
+COPY server .
 
 # Copy the configuration and usage files if they exist
 # These files will be created by the application if they don't exist,
