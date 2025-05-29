@@ -7,7 +7,7 @@ WORKDIR /app
 # Copy package.json and package-lock.json first to leverage Docker's build cache
 # This ensures that `npm install` is re-run only if dependencies change
 COPY package.json ./
-COPY package-lock.json ./
+
 
 # Install project dependencies
 RUN npm install
