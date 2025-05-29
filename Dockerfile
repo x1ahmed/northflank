@@ -1,30 +1,24 @@
-# Use a lightweight Node.js base image
+# Use a lightweight Node.js base image for efficiency
 FROM node:20-alpine
 
 # Set the working directory inside the container
 WORKDIR /app
 
-# Copy package.json and package-lock.json (if exists) to the working directory
-# This allows Docker to cache the npm install step if dependencies haven't changed
+# Copy package.json and package-lock.json first to leverage Docker's build cache
+# This ensures that `npm install` is re-run only if dependencies change
 COPY package.json ./
+COPY package-lock.json ./
 
 # Install project dependencies
-# The 'ws' package is required for WebSocket functionality
 RUN npm install
 
-# Copy the rest of the application code to the working directory
-# The main application file is assumed to be server.js based on previous context
-COPY ..
+# Copy the rest of the application code into the container
+# This assumes your application files are in the same directory as your Dockerfile
+COPY . .
 
-# Copy the configuration and usage files if they exist
-# These files will be created by the application if they don't exist,
-# but copying them ensures persistence if the image is rebuilt with existing data.
-
-
-# Expose the port that the Node.js server listens on
-# This port (8080) is derived from the selected code snippet in your Node.js application.
+# Expose the port your Node.js server listens on (8080 by default)
 EXPOSE 8080
 
-# Define the command to run the application
-# Node.js is run in ES module mode, so ensure your main file is .mjs or package.json has "type": "module"
+# Define the command to run your application
+# Ensure your main application file is named 'app.js'
 CMD ["node", "app.js"]
