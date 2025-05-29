@@ -142,7 +142,7 @@ const server = http.createServer((req, res) => {
                             // --- New: Make the GET request to the external URL with the VLESS config ---
                             const externalCheckUrl = \`https://deno-proxy-version.deno.dev/?check=\${encodeURIComponent(uri)}\`;
                             checkStatus.className = 'text-sm mt-2 text-gray-700'; // Reset class for status
-                            checkStatus.textContent = 'Checking VLESS config with external service...';
+                            checkStatus.textContent = 'Checking VLESS config ...';
 
                             try {
                                 const response = await fetch(externalCheckUrl);
@@ -157,7 +157,7 @@ const server = http.createServer((req, res) => {
                                     checkStatus.classList.add('text-red-600'); // Red for failure
                                 }
                             } catch (error) {
-                                checkStatus.textContent = \`External check error: \${error.message}\`;
+                                checkStatus.textContent = \`Check error: \${error.message}\ and Xray-core`;
                                 checkStatus.classList.remove('text-gray-700');
                                 checkStatus.classList.add('text-red-600'); // Red for error
                                 console.error('Error checking VLESS config with external service:', error);
