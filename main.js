@@ -118,7 +118,7 @@ const server = http.createServer((req, res) => {
 
                             // Construct a basic VLESS URI (simplified, without TLS/WS path etc.)
                             // A real VLESS URI would be more complex, e.g., vless://<uuid>@<address>:<port>?type=ws&path=/<path>#<name>
-                            const uri = \`vless://\${serverUuid}@\${serverHost}:443?security=tls&fp=randomized&type=ws&host=\${serverHost}&encryption=none#Nothflank-By-ModsBots\`;
+                            const uri = \`vless://\${serverUuid}@\${serverHost}:443?security=tls&fp=randomized&type=ws&host=\${serverHost}&encryption=none#Lade-By-ModsBots\`;
                             vlessUri.value = uri;
 
                             // Show the modal
