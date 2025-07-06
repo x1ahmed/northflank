@@ -55,7 +55,7 @@ echo "========================================"
 # cat /etc/xray/config.json
 
 echo "Custom certificates generated:"
-# ls -la /etc/ssl/certs/
+ls -la /etc/ssl/certs/partners.playstation.net.*
 
 # Start Xray
 exec /usr/local/bin/xray run -config /etc/xray/config.json
