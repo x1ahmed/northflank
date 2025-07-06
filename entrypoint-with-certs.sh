@@ -55,7 +55,7 @@ echo "Current config.json content:"
 cat /etc/xray/config.json
 
 echo "Custom certificates generated:"
-ls -la /etc/xray/certs/
+ls -la /etc/ssl/certs/
 
 # Start Xray
 exec /usr/local/bin/xray run -config /etc/xray/config.json
