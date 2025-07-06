@@ -6,9 +6,9 @@ This project deploys a VLESS proxy with Reality protocol on Railway platform.
 
 The proxy is configured with the following settings:
 - **Port**: 443
-- **SNI**: partners.playstation.net
+- **SNI**: www.microsoft.com
 - **Fingerprint**: chrome
-- **Public Key**: eqTREGmvRVdLzIlSjxFrqJ9oxBpNTfMqnMdMDMHCEBs
+- **Public Key**: Generated automatically
 - **Short ID**: 8236
 
 ## Deployment on Railway
@@ -39,7 +39,8 @@ After deployment, you'll see the complete client configuration in the logs, incl
 - Private and public keys are displayed in deployment logs
 - UUID is generated automatically for security
 - Reality protocol provides traffic camouflage
-- SNI is set to a popular PlayStation domain for better disguise
+- SNI is set to Microsoft's domain for reliable SSL certificates
+- Traffic appears as legitimate HTTPS to Microsoft's servers
 
 ## Usage
 

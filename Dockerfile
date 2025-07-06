@@ -5,7 +5,8 @@ RUN apk add --no-cache \
     curl \
     unzip \
     bash \
-    ca-certificates
+    ca-certificates \
+    openssl
 
 # Download and install Xray
 RUN ARCH=$(uname -m) && \
@@ -20,15 +21,17 @@ RUN ARCH=$(uname -m) && \
 # Create directories
 RUN mkdir -p /etc/xray /var/log/xray
 
-# Copy configuration and entrypoint
+# Copy configuration and scripts
 COPY config.json /etc/xray/config.json
 COPY entrypoint.sh /entrypoint.sh
+COPY entrypoint-with-certs.sh /entrypoint-with-certs.sh
+COPY generate-certs.sh /generate-certs.sh
 
-# Make entrypoint executable
-RUN chmod +x /entrypoint.sh
+# Make scripts executable
+RUN chmod +x /entrypoint.sh && chmod +x /entrypoint-with-certs.sh && chmod +x /generate-certs.sh
 
 # Expose port
 EXPOSE 443
 
 # Set entrypoint
-ENTRYPOINT ["/entrypoint.sh"]
+ENTRYPOINT ["/entrypoint-with-certs.sh"]
