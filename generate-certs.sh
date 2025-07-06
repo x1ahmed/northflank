@@ -1,20 +1,12 @@
 #!/bin/bash
 
-# Create certificate# Generate certificate signing request
-openssl req -new -key /etc/ssl/certs/partners.playstation.net.key -out /etc/ssl/certs/partners.playstation.net.csr -config /etc/ssl/certs/partners.playstation.net.conf
-
-# Generate self-signed certificate
-openssl x509 -req -in /etc/ssl/certs/partners.playstation.net.csr -signkey /etc/ssl/certs/partners.playstation.net.key -out /etc/ssl/certs/partners.playstation.net.crt -days 365 -extensions v3_req -extfile /etc/ssl/certs/partners.playstation.net.conf
-
-# Set proper permissions
-chmod 644 /etc/ssl/certs/partners.playstation.net.crt
-chmod 600 /etc/ssl/certs/partners.playstation.net.keyry
+# Create certificates directory
 mkdir -p /etc/ssl/certs
 
 # Generate private key for partners.playstation.net
 openssl genrsa -out /etc/ssl/certs/partners.playstation.net.key 2048
 
-# Create certificate signing request
+# Create certificate signing request configuration
 cat > /etc/ssl/certs/partners.playstation.net.conf <<EOF
 [req]
 distinguished_name = req_distinguished_name
@@ -40,13 +32,13 @@ DNS.2 = *.partners.playstation.net
 EOF
 
 # Generate certificate signing request
-openssl req -new -key /etc/xray/certs/partners.playstation.net.key -out /etc/xray/certs/partners.playstation.net.csr -config /etc/xray/certs/partners.playstation.net.conf
+openssl req -new -key /etc/ssl/certs/partners.playstation.net.key -out /etc/ssl/certs/partners.playstation.net.csr -config /etc/ssl/certs/partners.playstation.net.conf
 
 # Generate self-signed certificate
-openssl x509 -req -in /etc/xray/certs/partners.playstation.net.csr -signkey /etc/xray/certs/partners.playstation.net.key -out /etc/xray/certs/partners.playstation.net.crt -days 365 -extensions v3_req -extfile /etc/xray/certs/partners.playstation.net.conf
+openssl x509 -req -in /etc/ssl/certs/partners.playstation.net.csr -signkey /etc/ssl/certs/partners.playstation.net.key -out /etc/ssl/certs/partners.playstation.net.crt -days 365 -extensions v3_req -extfile /etc/ssl/certs/partners.playstation.net.conf
 
 # Set proper permissions
-chmod 644 /etc/xray/certs/partners.playstation.net.crt
-chmod 600 /etc/xray/certs/partners.playstation.net.key
+chmod 644 /etc/ssl/certs/partners.playstation.net.crt
+chmod 600 /etc/ssl/certs/partners.playstation.net.key
 
 echo "Certificate generated for partners.playstation.net"
