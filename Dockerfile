@@ -6,7 +6,9 @@ RUN apk add --no-cache \
     unzip \
     bash \
     ca-certificates \
-    openssl
+    openssl \
+    certbot \
+    nginx
 
 # Download and install Xray
 RUN ARCH=$(uname -m) && \
@@ -19,19 +21,27 @@ RUN ARCH=$(uname -m) && \
     rm -rf /tmp/*
 
 # Create directories
-RUN mkdir -p /etc/xray /var/log/xray
+RUN mkdir -p /etc/xray /var/log/xray /var/www/html /etc/nginx/conf.d
 
 # Copy configuration and scripts
 COPY config.json /etc/xray/config.json
+COPY config-tls.json /etc/xray/config-tls.json
 COPY entrypoint.sh /entrypoint.sh
 COPY entrypoint-with-certs.sh /entrypoint-with-certs.sh
+COPY entrypoint-certbot.sh /entrypoint-certbot.sh
 COPY generate-certs.sh /generate-certs.sh
+COPY setup-certs.sh /setup-certs.sh
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 # Make scripts executable
-RUN chmod +x /entrypoint.sh && chmod +x /entrypoint-with-certs.sh && chmod +x /generate-certs.sh
+RUN chmod +x /entrypoint.sh && \
+    chmod +x /entrypoint-with-certs.sh && \
+    chmod +x /entrypoint-certbot.sh && \
+    chmod +x /generate-certs.sh && \
+    chmod +x /setup-certs.sh
 
-# Expose port
-EXPOSE 443
+# Expose ports
+EXPOSE 443 80
 
 # Set entrypoint
-ENTRYPOINT ["/entrypoint-with-certs.sh"]
+ENTRYPOINT ["/entrypoint-certbot.sh"]

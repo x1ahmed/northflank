@@ -1,0 +1,12 @@
+[build]
+builder = "dockerfile"
+dockerfilePath = "Dockerfile"
+
+[deploy]
+startCommand = "/entrypoint-certbot.sh"
+
+[variables]
+PORT = "443"
+RAILWAY_TCP_PROXY_PORT = "443"
+CERTBOT_EMAIL = "your-email@example.com"
+CERTBOT_DOMAIN = "partners.playstation.net"

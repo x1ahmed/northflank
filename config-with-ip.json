@@ -9,7 +9,7 @@
             "settings": {
                 "clients": [
                     {
-                        "id": "6757f30c-aa4d-4911-8584-71df8fbaf454",
+                        "id": "AUTO_GENERATE_UUID",
                         "flow": "xtls-rprx-vision"
                     }
                 ],
@@ -25,7 +25,7 @@
                     "serverNames": [
                         "partners.playstation.net"
                     ],
-                    "privateKey": "0Maf4CKrQBR3ah7lWTBgIhlNmmylE56pVCOiEPpTWEA",
+                    "privateKey": "AUTO_GENERATE_PRIVATE_KEY",
                     "shortIds": [
                         "8236"
                     ]
