@@ -1,0 +1,10 @@
+build:
+  builder: dockerfile
+  dockerfilePath: Dockerfile
+
+deploy:
+  startCommand: /entrypoint.sh
+
+variables:
+  PORT: 443
+  RAILWAY_TCP_PROXY_PORT: 443
