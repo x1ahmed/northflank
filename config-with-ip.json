@@ -9,7 +9,7 @@
             "settings": {
                 "clients": [
                     {
-                        "id": "AUTO_GENERATE_UUID",
+                        "id": "6757f30c-aa4d-4911-8584-71df8fbaf454",
                         "flow": "xtls-rprx-vision"
                     }
                 ],
@@ -20,12 +20,12 @@
                 "security": "reality",
                 "realitySettings": {
                     "show": false,
-                    "dest": "104.16.53.111:443",
+                    "dest": "partners.playstation.net:443",
                     "xver": 0,
                     "serverNames": [
                         "partners.playstation.net"
                     ],
-                    "privateKey": "AUTO_GENERATE_PRIVATE_KEY",
+                    "privateKey": "0Maf4CKrQBR3ah7lWTBgIhlNmmylE56pVCOiEPpTWEA",
                     "shortIds": [
                         "8236"
                     ]
