@@ -9,7 +9,7 @@
       "settings": {
         "clients": [
           {
-            "id": "AUTO_GENERATE_UUID",
+            "id": "561f8625-8e3c-4733-8d83-a4529edce3cc",
             "flow": "xtls-rprx-vision"
           }
         ],
