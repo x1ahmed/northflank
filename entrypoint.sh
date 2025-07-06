@@ -3,8 +3,15 @@
 # Generate a UUID for the client
 UUID=$(cat /proc/sys/kernel/random/uuid)
 
-# Replace the placeholder UUID in the config file
-sed -i "s/AUTO_GENERATE_UUID/$UUID/g" /etc/xray/config.json
+# Generate Reality key pair
+echo "Generating Reality key pair..."
+KEYPAIR=$(/usr/local/bin/xray x25519)
+PRIVATE_KEY=$(echo "$KEYPAIR" | grep "Private key:" | cut -d' ' -f3)
+PUBLIC_KEY=$(echo "$KEYPAIR" | grep "Public key:" | cut -d' ' -f3)
+
+# Replace the placeholder UUID and private key in the config file
+sed -i "s/d342d11ed4244583b36e524ab1f0afa4/$UUID/g" /etc/xray/config.json
+sed -i "s/eqTREGmvRVdLzIlSjxFrqJ9oxBpNTfMqnMdMDMHCEBs/$PRIVATE_KEY/g" /etc/xray/config.json
 
 # Output the client configuration for easy setup
 echo "========================================"
@@ -19,12 +26,16 @@ echo "Network: tcp"
 echo "Security: reality"
 echo "SNI: partners.playstation.net"
 echo "Fingerprint: chrome"
-echo "PublicKey: eqTREGmvRVdLzIlSjxFrqJ9oxBpNTfMqnMdMDMHCEBs"
+echo "========================================"
+echo "GENERATED REALITY KEYS:"
+echo "Private Key: $PRIVATE_KEY"
+echo "Public Key: $PUBLIC_KEY"
+echo "========================================"
 echo "ShortId: 8236"
 echo "========================================"
 echo ""
 echo "Client URL:"
-echo "vless://$UUID@$RAILWAY_PUBLIC_DOMAIN:443?encryption=none&flow=xtls-rprx-vision&security=reality&sni=partners.playstation.net&fp=chrome&pbk=eqTREGmvRVdLzIlSjxFrqJ9oxBpNTfMqnMdMDMHCEBs&sid=8236&type=tcp#Railway-VLESS-Reality"
+echo "vless://$UUID@$RAILWAY_PUBLIC_DOMAIN:443?encryption=none&flow=xtls-rprx-vision&security=reality&sni=partners.playstation.net&fp=chrome&pbk=$PUBLIC_KEY&sid=8236&type=tcp#Railway-VLESS-Reality"
 echo "========================================"
 
 # Start Xray
