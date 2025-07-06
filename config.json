@@ -6,8 +6,7 @@
     {
       "port": 443,
       "protocol": "vless",
-      "settings": {
-        "clients": [
+      "settings": {        "clients": [
           {
             "id": "AUTO_GENERATE_UUID",
             "flow": "xtls-rprx-vision"
@@ -25,7 +24,7 @@
           "serverNames": [
             "partners.playstation.net"
           ],
-          "privateKey": "eqTREGmvRVdLzIlSjxFrqJ9oxBpNTfMqnMdMDMHCEBs",
+          "privateKey": "AUTO_GENERATE_PRIVATE_KEY",
           "shortIds": [
             "8236"
           ]
@@ -35,8 +34,14 @@
   ],
   "outbounds": [
     {
-      "protocol": "freedom",
-      "settings": {}
+      "protocol": "freedom"
     }
-  ]
+  ],
+  "stats": {},
+  "policy": {
+    "system": {
+      "statsInboundUplink": true,
+      "statsInboundDownlink": true
+    }
+  }
 }
