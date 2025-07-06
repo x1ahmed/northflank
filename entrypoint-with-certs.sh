@@ -30,32 +30,32 @@ sed -i "s/AUTO_GENERATE_PRIVATE_KEY/$PRIVATE_KEY/g" /etc/xray/config.json
 echo "========================================"
 echo "VLESS Reality Proxy Configuration"
 echo "========================================"
-echo "Protocol: vless"
+# echo "Protocol: vless"
 echo "Server: $RAILWAY_PUBLIC_DOMAIN"
 echo "Port: 443"
 echo "UUID: $UUID"
-echo "Flow: xtls-rprx-vision"
-echo "Network: tcp"
-echo "Security: reality"
-echo "SNI: partners.playstation.net"
-echo "Fingerprint: chrome"
+# echo "Flow: xtls-rprx-vision"
+# echo "Network: tcp"
+# echo "Security: reality"
+# echo "SNI: partners.playstation.net"
+# echo "Fingerprint: chrome"
 echo "========================================"
-echo "GENERATED REALITY KEYS:"
+# echo "GENERATED REALITY KEYS:"
 echo "Private Key: $PRIVATE_KEY"
 echo "Public Key: $PUBLIC_KEY"
+# echo "========================================"
+# echo "ShortId: 8236"
 echo "========================================"
-echo "ShortId: 8236"
-echo "========================================"
-echo ""
+# echo ""
 echo "Client URL:"
 echo "vless://$UUID@$RAILWAY_PUBLIC_DOMAIN:443?encryption=none&flow=xtls-rprx-vision&security=reality&sni=partners.playstation.net&fp=chrome&pbk=$PUBLIC_KEY&sid=8236&type=tcp&allowInsecure=1#Railway-VLESS-Reality"
 echo "========================================"
 
-echo "Current config.json content:"
-cat /etc/xray/config.json
+# echo "Current config.json content:"
+# cat /etc/xray/config.json
 
 echo "Custom certificates generated:"
-ls -la /etc/ssl/certs/
+# ls -la /etc/ssl/certs/
 
 # Start Xray
 exec /usr/local/bin/xray run -config /etc/xray/config.json
