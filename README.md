@@ -22,6 +22,7 @@ The proxy is configured with the following settings:
 
 After deployment, you'll see the complete client configuration in the logs, including:
 - Generated UUID
+- Generated Reality private and public keys
 - Railway domain
 - Complete VLESS URL for easy import
 
@@ -34,7 +35,8 @@ After deployment, you'll see the complete client configuration in the logs, incl
 
 ## Security Notes
 
-- The private key is already configured
+- Reality key pair is generated automatically on each deployment for maximum security
+- Private and public keys are displayed in deployment logs
 - UUID is generated automatically for security
 - Reality protocol provides traffic camouflage
 - SNI is set to a popular PlayStation domain for better disguise

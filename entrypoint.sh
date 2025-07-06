@@ -38,5 +38,17 @@ echo "Client URL:"
 echo "vless://$UUID@$RAILWAY_PUBLIC_DOMAIN:443?encryption=none&flow=xtls-rprx-vision&security=reality&sni=partners.playstation.net&fp=chrome&pbk=$PUBLIC_KEY&sid=8236&type=tcp#Railway-VLESS-Reality"
 echo "========================================"
 
+# Final configuration update before starting Xray
+echo "Updating configuration with generated values..."
+sed -i "s/d342d11ed4244583b36e524ab1f0afa4/$UUID/g" /etc/xray/config.json
+sed -i "s/eqTREGmvRVdLzIlSjxFrqJ9oxBpNTfMqnMdMDMHCEBs/$PRIVATE_KEY/g" /etc/xray/config.json
+
+echo "Current config.json content:"
+cat /etc/xray/config.json
+
+echo "Configuration updated successfully!"
+echo "Starting Xray with UUID: $UUID"
+echo "Starting Xray with Private Key: $PRIVATE_KEY"
+
 # Start Xray
 exec /usr/local/bin/xray run -config /etc/xray/config.json
